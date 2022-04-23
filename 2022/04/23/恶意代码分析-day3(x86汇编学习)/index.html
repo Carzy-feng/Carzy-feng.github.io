@@ -1,0 +1,1078 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Carzy">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="学习《恶意代码分析实战》一书时，跟随书本所做的练习 X86体系结构​	大部分现代计算机体系结构在内部实现上遵循冯●诺依曼结构，这种结构包含3中硬件组件：  中央处理器(CPU)，负责执行代码 内存(RAM)，负责存储有的数据和代码 输入&#x2F;输出系统(I&#x2F;O)，为硬件、键盘、显示器等设备提供接口  CPU又包含一些组件。其中： ​	控制单元（conteol unit）使用某一个又称">
+<meta property="og:type" content="article">
+<meta property="og:title" content="恶意代码分析实战-day3(x86汇编学习)">
+<meta property="og:url" content="http://example.com/2022/04/23/%E6%81%B6%E6%84%8F%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90-day3(x86%E6%B1%87%E7%BC%96%E5%AD%A6%E4%B9%A0)/index.html">
+<meta property="og:site_name" content="Carzy的笔记">
+<meta property="og:description" content="学习《恶意代码分析实战》一书时，跟随书本所做的练习 X86体系结构​	大部分现代计算机体系结构在内部实现上遵循冯●诺依曼结构，这种结构包含3中硬件组件：  中央处理器(CPU)，负责执行代码 内存(RAM)，负责存储有的数据和代码 输入&#x2F;输出系统(I&#x2F;O)，为硬件、键盘、显示器等设备提供接口  CPU又包含一些组件。其中： ​	控制单元（conteol unit）使用某一个又称">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202204211407748.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202204211409738.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202204211458810.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202204211637274.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202204211700114.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202204231231517.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202204231231793.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202204231245944.png">
+<meta property="article:published_time" content="2022-04-23T07:45:34.224Z">
+<meta property="article:modified_time" content="2022-04-23T08:01:36.821Z">
+<meta property="article:author" content="Carzy">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202204211407748.png">
+  
+  
+  <title>恶意代码分析实战-day3(x86汇编学习) - Carzy的笔记</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4/github-markdown.min.css" />
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hint.css@2/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.css" />
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.8.14","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Fluid</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="恶意代码分析实战-day3(x86汇编学习)">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2022-04-23 15:45" pubdate>
+        2022年4月23日 下午
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      8.1k 字
+    </span>
+  
+
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      68 分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">恶意代码分析实战-day3(x86汇编学习)</h1>
+            
+            <div class="markdown-body">
+              <p>学习《恶意代码分析实战》一书时，跟随书本所做的练习</p>
+<h2 id="X86体系结构"><a href="#X86体系结构" class="headerlink" title="X86体系结构"></a>X86体系结构</h2><p>​	大部分现代计算机体系结构在内部实现上遵循冯●诺依曼结构，这种结构包含3中硬件组件：</p>
+<ul>
+<li>中央处理器(CPU)，负责执行代码</li>
+<li>内存(RAM)，负责存储有的数据和代码</li>
+<li>输入&#x2F;输出系统(I&#x2F;O)，为硬件、键盘、显示器等设备提供接口</li>
+</ul>
+<p>CPU又包含一些组件。其中：</p>
+<p>​	控制单元（conteol unit）使用某一个又称为指针（instruction pointer）的寄存器（register）从内存取得要执行的指令，这个寄存器中存有指令的地址。</p>
+<p>​	寄存器是CPU中数据的基本存储单元，通过它，很多时候CPU不再需要访问内存，从而节省了时间。</p>
+<p>​	算数逻辑单元（arithmetic logic unit,ALU）执行从内存取出来的指令，并将结果放到寄存器或内存中。一条条取指令、执行指令的过程不断重复，就形成了程序的运行。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202204211407748.png" srcset="/img/loading.gif" lazyload alt="image-20220421140746828"></p>
+<h3 id="1、内存"><a href="#1、内存" class="headerlink" title="1、内存"></a>1、内存</h3><p>​	一个程序的内存可以分为以下四个主要的节</p>
+<ul>
+<li><strong>数据</strong>：这个词指的是内存中一个特定的节，名为数据节（data section），其中包含了一些值。这些值在程序初始加载时被放到这里，称为静态值（static value），因为程序运行时，它们可能并不发生拜年话，还可以称为全局值（global value），因为程序的任何部分都可以使用它们。</li>
+<li><strong>代码</strong>：代码节包括了在执行程序任务时CPU所取得的指令。这些代码决定了程序是做什么的，以及程序中的任务如何协调工作。</li>
+<li><strong>堆</strong>：堆是为程序执行期间需要的动态内存准备的，用于创建（分配）新的值，以及消除(释放)不再需要的值。将其称为动态内存（dynamic memory），是因为其内容再程序运行期间经常被改变。</li>
+<li><strong>栈</strong>：栈用于函数的局部变量和参数，以及控制程序执行流。</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202204211409738.png" srcset="/img/loading.gif" lazyload alt="image-20220421140930580"></p>
+<h3 id="2、指令"><a href="#2、指令" class="headerlink" title="2、指令"></a>2、指令</h3><p>​	指令是汇编程序的构成块。在x86汇编语言中，一条指令由一个助记符，以及零个或多个操作数组成，如下表：</p>
+<p>助记符表示要执行的指令，如<code>MOV</code>表示移动数据。操作数用于说明指令要使用的信息，如寄存器或数据</p>
+<table>
+<thead>
+<tr>
+<th>助记符</th>
+<th>目标操作数</th>
+<th>源操作数</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>mov</td>
+<td>ecx</td>
+<td>0x42</td>
+</tr>
+</tbody></table>
+<h3 id="3、操作码和字节序"><a href="#3、操作码和字节序" class="headerlink" title="3、操作码和字节序"></a>3、操作码和字节序</h3><p>​	每条指令使用操作码告诉CPU程序要执行什么样的操作</p>
+<p>反汇编器将操作码翻译为人类易读的指令，如下表：</p>
+<p>可以看到指令<code>mov ecx, 0x42</code>的操作码是<code>B9 42 00 00 00</code>,其中，<code>0xB9</code>对应<code>mov ecx,</code>而<code>0x42000000</code>对应<code>0X42</code>这个值。</p>
+<table>
+<thead>
+<tr>
+<th>指令</th>
+<th>mov ecx,</th>
+<th>0x42</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>操作码</td>
+<td>B9</td>
+<td>42 00 00 00</td>
+</tr>
+</tbody></table>
+<p>用<code>0X42000000</code>表示值<code>0x42</code>，是因为x86架构使用小端字节序。数据的字节序（endianness）是指在一个大数据项中，最高位（大端，big-endian）还是最低位（小端，little-endian）被排在第一位(即排在最低的地址上)。一些恶意代码咱网络通信时必须改变字节序，因为网络数据使用大端字节序，而x86程序使用小端字节序。因此,在（网络的）大端字节序下，IP地址<code>127.0.0.1</code>会被表示为<code>0x7F000001</code>，而在（本地内存中）小端字节序下，表示为<code>0x0100007F</code></p>
+<h3 id="4、操作数"><a href="#4、操作数" class="headerlink" title="4、操作数"></a>4、操作数</h3><p>​	操作数说明指令要使用大数据。有以下三种类型：</p>
+<ul>
+<li>立即数（immediate）操作数是一个固定的值，如上方的<code>0x42</code></li>
+<li>寄存器（register）操作数指向寄存器，如上方的<code>exc</code></li>
+<li>内存地址(memory address)操作数指向感兴趣的值所在的内存地址，一般由方括号内包含值、寄存器或方程式组成，如<code>[eax]</code></li>
+</ul>
+<h3 id="5、寄存器"><a href="#5、寄存器" class="headerlink" title="5、寄存器"></a>5、寄存器</h3><p>​	寄存器是可以被CPU使用的少量数据存储器，访问其中内容的的速度回避访问其他存储器要块。x86处理器中有一组寄存器，可以用于临时存储或作为工作区。下面列举了最常用的x86寄存器，可以将它们归为以下四类：</p>
+<ul>
+<li>通用寄存器，CPU在指向期间使用。</li>
+<li>段寄存器，用于定位内存节。</li>
+<li>状态标志，用于做出决定。</li>
+<li>指令指针，用于定位要指向的下一条指令。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>通用寄存器</th>
+<th>段寄存器</th>
+<th>标志寄存器</th>
+<th>指令指针</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>EAX(AX,AH,AL)</td>
+<td>CS</td>
+<td>EFLAGS</td>
+<td>EIP</td>
+</tr>
+<tr>
+<td>EBX(BX,BH,BL)</td>
+<td>SS</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>ECX(CX,CH,CL)</td>
+<td>DS</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>EDX(DX,DH,DL)</td>
+<td>ES</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>EBP(BP)</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>ESP(SP)</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>ESI(SI)</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<p><strong>具体介绍这些寄存器的分类</strong></p>
+<p>​	所有通用寄存器的大小都是32位，可以在汇编代码中以32位或16位引用。比如<code>EDX</code>指向这个完整的32位寄存器，而<code>DX</code>指向<code>EDX</code>寄存器中的低16位。</p>
+<p>​	有四个寄存器（EAX,EBX,ECX,EDX）还剋以8位值的方式引用，从而是哟其最低的8位，或次低的8位，例如，<code>AL</code>指向<code>EAX</code>寄存器的最低8位，而<code>AH</code>指向它的次低8位。</p>
+<p>上表列出了堆这些通用寄存器的所有可能引用方式，<code>EAX</code>寄存器的分解方法见下图，其中32位（4字节）寄存器<code>EAX</code>存储了值<code>0XA9DC81F5</code>，代码可以使用其他三种方法来引用<code>EAX</code>中的这个数据：<code>AX</code>（2字节）是<code>0x81F5</code>,<code>AL</code>（1字节）是<code>0xF5</code>,<code>AH</code>（1字节）是<code>0x81</code>。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202204211458810.png" srcset="/img/loading.gif" lazyload alt="image-20220421145837606"></p>
+<h4 id="通用寄存器"><a href="#通用寄存器" class="headerlink" title="通用寄存器"></a>通用寄存器</h4><p>​	通用寄存器一般用于存储数据或内存地址，而且经常交换这使用以完成的程序，不过，虽然它们被称为通用寄存器，但它们并不完全通用。</p>
+<p>​	一些x86指令只能使用特定的寄存器。例如，乘法和除法指令就只能使用<code>EAX</code>和<code>EDX</code>。</p>
+<p>​	除了指令的定义，通用寄存器还被程序的一致特性使用。在编译代码时对寄存器的一致特性称为约定（convention）。具备编译器使用约定的知识可以让恶意代码分析师更快地阅读代码，因为不需要浪费时间去搞清除一些寄存器是如何被使用的。比如，<code>EAX</code>通常存储了一个函数调用的返回值，因此，如果你看到在一个函数调用之后马上用到了<code>EAX</code>寄存器，可能就是在操作返回值了。</p>
+<h4 id="标志寄存器"><a href="#标志寄存器" class="headerlink" title="标志寄存器"></a>标志寄存器</h4><p>​	<code>EFLAGS</code>寄存器是一个标志寄存器。在x86架构中，它是32位的，每一位是一个标志。在执行期间，每一位表示要么是置位（值为1），要么是清除（值为0），并由这些值来控制CPU的运算，或者给出某些CPU运算的值。对恶意代码分析来说，最重要的一些标志介绍如下：</p>
+<ul>
+<li><strong>ZF</strong>：当一个运算的结果等于0时，<code>ZF</code>被置位，否则被清除。</li>
+<li>**<code>CF</code>**：当一个运算的结果相对于目标操作数太大或太小时，<code>CF</code>被置位，否则被清除。</li>
+<li>**<code>SF</code>**：当一个运算的结果为负数，<code>SF</code>被置位；若结果为正数，<code>SF</code>被清除。对算数运算，当运算结果的最高位值为1时，<code>SF</code>也会被置位。</li>
+<li>**<code>TF</code>**：<code>TF</code>用于调试，当它被置位时，x86处理器每次只执行一条指令。</li>
+</ul>
+<h4 id="EIP，指令指针"><a href="#EIP，指令指针" class="headerlink" title="EIP，指令指针"></a>EIP，指令指针</h4><p>​	在x86架构中，<code>EIP</code>寄存器，又称为指令指针或程序计数器，保存了程序将要执行的下一条指令在内存的地址中。<code>EIP</code>的唯一作用就是告诉处理器接下来要做说明。</p>
+<blockquote>
+<p><strong>注意</strong>：当EIP被破坏（即指向了一个不包含合法程序代码的内存地址）时，CPU无法取得一条合法指令来执行，此时正在运行的程序就可能崩溃。当你控制了EIP，也就控制了CPU将要执行什么，这也就是为什么攻击者试图通过漏洞利用获取对EIP的控制。通常攻击者先要使攻击代码进入内存，然后改变EIP使其指向那段代码，从而攻击系统。</p>
+</blockquote>
+<h3 id="6、简单指令"><a href="#6、简单指令" class="headerlink" title="6、简单指令"></a>6、简单指令</h3><table>
+<thead>
+<tr>
+<th>指令</th>
+<th>描述</th>
+<th>格式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>mov</td>
+<td>用于将数据从一个位置移动到另一个位置</td>
+<td>mov destination,source</td>
+</tr>
+<tr>
+<td>lea</td>
+<td>将一个内存地址付给目的操作数。</td>
+<td>lea destination,source</td>
+</tr>
+<tr>
+<td>add</td>
+<td>从目标操作数中加上一个值</td>
+<td>add destination,value</td>
+</tr>
+<tr>
+<td>sub</td>
+<td>从目标操作数中减去一个值</td>
+<td>sub destination,value</td>
+</tr>
+<tr>
+<td>inc</td>
+<td>将一个寄存器加一</td>
+<td>inc value</td>
+</tr>
+<tr>
+<td>dec</td>
+<td>将一个寄存器减一</td>
+<td>dec value</td>
+</tr>
+<tr>
+<td>mul</td>
+<td>eax乘以指定的值</td>
+<td>mul value</td>
+</tr>
+<tr>
+<td>div</td>
+<td>eax除以指定的值</td>
+<td>div value</td>
+</tr>
+<tr>
+<td>or</td>
+<td>逻辑运算符</td>
+<td>or destination,source</td>
+</tr>
+<tr>
+<td>and</td>
+<td>逻辑运算符</td>
+<td>and destination,source</td>
+</tr>
+<tr>
+<td>xor</td>
+<td>逻辑运算符</td>
+<td>xor destination,source</td>
+</tr>
+<tr>
+<td>shr</td>
+<td>对寄存器进行移位操作，对目的操作数右移指定的值</td>
+<td>shr destination,count</td>
+</tr>
+<tr>
+<td>shl</td>
+<td>对寄存器进行移位操作，对目的操作数左移指定的值</td>
+<td>shl destination,count</td>
+</tr>
+<tr>
+<td>ror</td>
+<td>循环移位指令，对目的操作数右循环移指定的值</td>
+<td>ror destionation,count</td>
+</tr>
+<tr>
+<td>rol</td>
+<td>循环移位指令，对目的操作数左循环移指定的值</td>
+<td>rol destionation,count</td>
+</tr>
+<tr>
+<td>nop</td>
+<td>上面都不做。直接执行下一条指令;  实际是xchg eax,eax的一个伪名字</td>
+<td></td>
+</tr>
+</tbody></table>
+<h4 id="指令示例"><a href="#指令示例" class="headerlink" title="指令示例"></a>指令示例</h4><h5 id="mov示例"><a href="#mov示例" class="headerlink" title="mov示例"></a><strong>mov示例</strong></h5><table>
+<thead>
+<tr>
+<th>指令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>mov eax,ebx</td>
+<td>将EBX中的内容复制至EAX寄存器</td>
+</tr>
+<tr>
+<td>mov eax,0x42</td>
+<td>将立即数0x42复制至EAX寄存器</td>
+</tr>
+<tr>
+<td>mov eax,[0x4037C4]</td>
+<td>将内存地址0x4037C4的4个字节复制到EAX寄存器</td>
+</tr>
+<tr>
+<td>mov eax,[ebx]</td>
+<td>将EBX寄存器指向的内存地址处4个字节复制至EAX寄存器</td>
+</tr>
+<tr>
+<td>mov eax,[ebx+esi*4]</td>
+<td>将ebx+esi*4等式结果指向的内存地址处4个字节复制至EAX</td>
+</tr>
+</tbody></table>
+<h5 id="lea示例"><a href="#lea示例" class="headerlink" title="lea示例"></a><strong>lea示例</strong></h5><table>
+<thead>
+<tr>
+<th>指令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>lea eax,[ebx+8]</td>
+<td>将EBX+8的值给EAX</td>
+</tr>
+<tr>
+<td>mov eax,[ebx+8]</td>
+<td>与上面那条指令相反，该指令加载内存中地址为EBX+8处的数据</td>
+</tr>
+</tbody></table>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202204211637274.png" srcset="/img/loading.gif" lazyload alt="image-20220421163756937"></p>
+<p>上图左侧展示了<code>EAX</code>和<code>EBX</code>寄存器的值，在右侧展示了内存中的数据。<code>EBX</code>的值为<code>0xB30040</code>，在<code>0xB30048</code>这个内存地址保存的值为<code>0X20</code>。因此指令<code>mov eax,[ebx+8]</code>将(从内存中获取的值)<code>0x20</code>赋给<code>EAX</code>。而指令<code>lea eax,[ebx+8]</code>则将<code>0xB30048</code>这个值给<code>EAX</code></p>
+<h5 id="sub、add、inc、dec示例"><a href="#sub、add、inc、dec示例" class="headerlink" title="sub、add、inc、dec示例"></a>sub、add、inc、dec示例</h5><table>
+<thead>
+<tr>
+<th>指令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>sub eax,0x10</td>
+<td>EAX寄存器值减去0x10</td>
+</tr>
+<tr>
+<td>add eax,ebx</td>
+<td>将EBX值加入EAX并将结果保存至EAX</td>
+</tr>
+<tr>
+<td>inc edx</td>
+<td>EDX值递增1</td>
+</tr>
+<tr>
+<td>dec ecx</td>
+<td>ECX值递减1</td>
+</tr>
+</tbody></table>
+<p>其中<code>sub</code>指令会修改两个重要的标志:<code>ZF</code>和<code>CF</code>。如果结果为零，<code>ZF</code>被置位；如果目标操作数比减去的值小，则<code>CF</code>被置位。</p>
+<h5 id="mul、div示例"><a href="#mul、div示例" class="headerlink" title="mul、div示例"></a>mul、div示例</h5><table>
+<thead>
+<tr>
+<th>指令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>mul 0x50</td>
+<td>EAX值乘以0x50，并将结果存入EDX:EAX寄存器中</td>
+</tr>
+<tr>
+<td>div 0x75</td>
+<td>将EDX:EAX值除以0x75，并将结果存入EAX，将余数存入EDX</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong>注意</strong>：EAX寄存器必须在乘法指令出现前就赋值号。乘法结果以64为的形式分别存储在两个寄存器中：EDX和EAX。其中EDX存储了高的32位，EAX存储低的32位。下图展示了当乘法的结果是5 000 000 000（十进制）这样大到无法用一个寄存器存储时，EDX和EAX中的值</p>
+<p>​	duv指令则与mul类似，但运算方向正好相反：他将EDX和EAX合起来存储的64位值除以value。因此在做除法之前，EDX和EAX这两个寄存器必须赋值好。除法的商将存储到EAX，余数则存储在EDX中。</p>
+<p>​	例如：使用模(modulo)运算得到除法的余数，这个运算会被编译位在div指令后去EDX寄存器的值(因为除法保留了余数)</p>
+</blockquote>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202204211700114.png" srcset="/img/loading.gif" lazyload alt="image-20220421170034494"></p>
+<h5 id="常用的逻辑和移位算术运算指令"><a href="#常用的逻辑和移位算术运算指令" class="headerlink" title="常用的逻辑和移位算术运算指令"></a>常用的逻辑和移位算术运算指令</h5><table>
+<thead>
+<tr>
+<th>指令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>xor eax,eax</td>
+<td>将EAX寄存器清零</td>
+</tr>
+<tr>
+<td><div style="width:100pt">or eax,0x7575</div></td>
+<td>将EAX值进行与0x7575的or操作</td>
+</tr>
+<tr>
+<td>mov eax,0xA</td>
+<td>将0xA(1010)赋值给EAX寄存器</td>
+</tr>
+<tr>
+<td>shl eax,2</td>
+<td>将EAX寄存器左移两位，与mov eax,0xA,结合将导致EAX&#x3D;0X28，因为1010左移两位之后位101000(0x28)</td>
+</tr>
+<tr>
+<td>mov bl,0xA</td>
+<td>将0xA赋值给BL寄存器</td>
+</tr>
+<tr>
+<td>ror bl,2</td>
+<td>将BL寄存器循环移位移两位，与mov bl,0xA结合将导致BL&#x3D;10000010,因为1010向右循环移动2位为10000010</td>
+</tr>
+</tbody></table>
+<h5 id="nop"><a href="#nop" class="headerlink" title="nop"></a>nop</h5><p>​	nop什么事情也不做。当它出现时，直接执行下一条指令。</p>
+<p>​	这条指令的opencode是<code>0X90</code>。在缓冲区溢出攻击中，当攻击者无法完美地控制利用代码，就经常使用<code>NOP</code>滑板，它起到了填充代码的作用，以降低shellcode可能在中间部分开始执行所造成的风险</p>
+<h3 id="7、栈"><a href="#7、栈" class="headerlink" title="7、栈"></a>7、栈</h3><p>​	用于函数的内存、局部变量、流控制结构等被存储在栈中。栈是一种用压合弹操作来刻画的数据结构，向栈中压入一些东西，然后再把它们弹出来。它是一种后入先出的结构。</p>
+<p>​	x86结构有对栈的内建支持。用于这种支持的寄存器包含<code>ESP</code>和<code>EBP</code>。其中：</p>
+<ul>
+<li><code>ESP</code>是栈指针，包含了指向栈顶的内存地址，一些东西被压入或弹出栈时，这个寄存器的值相应改变</li>
+<li><code>EBP</code>是栈基址寄存器，在一个函数中会保存不变，因此程序把它当作定位器，用来确定局部变量和参数的位置。</li>
+</ul>
+<p>​	在内存中，栈被分配成自顶向下的，最高地址最先被使用。当一个值被压入栈时，使用低一点的地址</p>
+<p>​	栈只能用于短期存储，他经常用于保存局部变量、参数和返回地址。其主要用途是管理函数调用之间的数据交换</p>
+<h4 id="指令"><a href="#指令" class="headerlink" title="指令"></a>指令</h4><table>
+<thead>
+<tr>
+<th>指令</th>
+<th>描述</th>
+<th>格式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>push</td>
+<td>将参数压入栈中</td>
+<td>push value</td>
+</tr>
+<tr>
+<td>pop</td>
+<td>将参数弹出栈中</td>
+<td>pop value</td>
+</tr>
+<tr>
+<td>pusha</td>
+<td>按照顺序将16位寄存器都压入栈中：AX、CX、DX、BX、SP、BP、SI、DI</td>
+<td>pusha</td>
+</tr>
+<tr>
+<td>pushad</td>
+<td>按照顺序将32位寄存器都压入栈中：EAX、ECX、EDX、EBX、ESP、ESI、EDI</td>
+<td>pusha</td>
+</tr>
+<tr>
+<td>call</td>
+<td>调用指定函数</td>
+<td>call value</td>
+</tr>
+<tr>
+<td>leave</td>
+<td>结束堆栈帧：常用于结语，使ESP等于EBP，然后从栈中弹出EBP</td>
+<td>leave</td>
+</tr>
+<tr>
+<td>enter</td>
+<td>创建堆栈帧：</td>
+<td>ENTER numbytes, nestinglevel</td>
+</tr>
+<tr>
+<td>ret</td>
+<td>从栈中弹出返回地址给EIP</td>
+<td></td>
+</tr>
+</tbody></table>
+<h4 id="函数调用"><a href="#函数调用" class="headerlink" title="函数调用"></a>函数调用</h4><blockquote>
+<p>1、使用push指令将参数压入栈中。</p>
+<p>2、使用call memory_location来掉用函数，此时当前指令地址(指EIP寄存器中的内容)被压入栈中。这个地址会在函数结束后，被用于返回著代码。当函数开始执行时，EIP的值被设为memory_location(即函数的起始地址)。</p>
+<p>3、通过函数的序言部分，分配栈中用于局部变量的空间，EBP(基址指针)也被压入栈中。这样就达到了为调用函数八平村EBP的目的。</p>
+<p>4、函数开始做它的工作。</p>
+<p>5、通过函数的结语部分，恢复栈。调整ESP来释放局部变量，恢复EBP，以使得调用函数可以准确地确定它的变量。<strong>leave</strong>指令可以用作结语，因为它的功能是使<strong>ESP</strong>等于<strong>EBP</strong>，然后从栈中弹出<strong>EBP</strong>。</p>
+<p>6、函数通过调用<strong>ret</strong>指令返回。这个指令会从栈中弹出返回地址给<strong>EIP</strong>，因此程序会从原来调用的地方继续执行。</p>
+<p>7、调整栈，以移除此前压入的参数，除非它们在后面还要被使用</p>
+</blockquote>
+<h4 id="栈的布局"><a href="#栈的布局" class="headerlink" title="栈的布局"></a>栈的布局</h4><p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202204231231517.png" srcset="/img/loading.gif" lazyload alt="image-20220423123137072"></p>
+<p>当数据被压入栈时，ESP会随之减小，如下图：</p>
+<ul>
+<li>如果执行<code>push eax</code>指令，ESP就会减少4，变成<code>0x12F028</code>，而EAX中的数据则会被赋值到<code>0x12F028</code>处。</li>
+<li>如果执行<code>pop ebx</code>，则<code>0X12F028</code>处的数据就会被赋给EBX寄存器，而ESP也随之增加4.</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202204231231793.png" srcset="/img/loading.gif" lazyload alt="单独的一个栈帧"></p>
+<h3 id="8、条件指令"><a href="#8、条件指令" class="headerlink" title="8、条件指令"></a>8、条件指令</h3><table>
+<thead>
+<tr>
+<th>指令</th>
+<th>描述</th>
+<th>格式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>test</td>
+<td>与and指令功能一样，但不会影响操作数，只设置标志位</td>
+<td>test dst,src</td>
+</tr>
+<tr>
+<td>cmp</td>
+<td>与sub指令功能一样，但不会影响操作数,只设置标志位</td>
+<td>cmp dst,src</td>
+</tr>
+</tbody></table>
+<p><strong>示例</strong></p>
+<table>
+<thead>
+<tr>
+<th>指令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>test eax,eax</td>
+<td>将eax寄存器与eax寄存器比较，执行后需要关注ZF标志位</td>
+</tr>
+<tr>
+<td>cmp eax,ebx</td>
+<td>使用eax寄存器的值减去ebx寄存器的值，标志位变化如下图</td>
+</tr>
+</tbody></table>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202204231245944.png" srcset="/img/loading.gif" lazyload alt="cmp 指令与标志位"></p>
+<h3 id="9、分支指令"><a href="#9、分支指令" class="headerlink" title="9、分支指令"></a>9、分支指令</h3><table>
+<thead>
+<tr>
+<th>指令</th>
+<th>描述</th>
+<th>格式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>jmp</td>
+<td>跳转到指定位置</td>
+<td>jmp location</td>
+</tr>
+<tr>
+<td>jz</td>
+<td>如果ZF&#x3D;1，跳转至指定位置</td>
+<td>jz location</td>
+</tr>
+<tr>
+<td>jnz</td>
+<td>如果ZF&#x3D;0，跳转至指定位置</td>
+<td>jnz location</td>
+</tr>
+<tr>
+<td>je</td>
+<td>与jz类似，但通常在一条cmp指令后使用。如果源操作数与目的操作数相等，则跳转</td>
+<td>je location</td>
+</tr>
+<tr>
+<td>jne</td>
+<td>与jnz类似，但通常在一条cmp指令后使用。如果源操作数与目的操作数不相等，则跳转</td>
+<td>jne location</td>
+</tr>
+<tr>
+<td>jg</td>
+<td>在一条cmp指令做有符号比较之后，如果目的操作数大于源操作数，跳转</td>
+<td>jg location</td>
+</tr>
+<tr>
+<td>jge</td>
+<td>在一条cmp指令做有符号比较之后，如果目的操作数大于或等于源操作数，跳转</td>
+<td>jge location</td>
+</tr>
+<tr>
+<td>ja</td>
+<td>与jg类似，但使用无符号比较</td>
+<td>ja location</td>
+</tr>
+<tr>
+<td>jae</td>
+<td>与jge类似，但使用无符号比较</td>
+<td>jae location</td>
+</tr>
+<tr>
+<td>jl</td>
+<td>在一条cmp指令做有符号比较之后，如果目的操作数小于源操作数，则跳转</td>
+<td>jl location</td>
+</tr>
+<tr>
+<td>jle</td>
+<td>在一条cmp指令做有符号比较之后，如果目的操作数小于或等于源操作数，则跳转</td>
+<td>jle location</td>
+</tr>
+<tr>
+<td>jb</td>
+<td>与jl类似，但使用无符号比较</td>
+<td>jb location</td>
+</tr>
+<tr>
+<td>jbe</td>
+<td>与jle类似，但使用无符号比较</td>
+<td>jbe location</td>
+</tr>
+<tr>
+<td>jo</td>
+<td>如果前一条指令置位了溢出标志位(OF&#x3D;1),则跳转</td>
+<td>jo location</td>
+</tr>
+<tr>
+<td>js</td>
+<td>如果符号标志位被置位(SF&#x3D;1),则跳转</td>
+<td>js location</td>
+</tr>
+<tr>
+<td>jecxz</td>
+<td>如果ECX&#x3D;0,则跳转</td>
+<td>jecxz location</td>
+</tr>
+</tbody></table>
+<h3 id="10、重复指令"><a href="#10、重复指令" class="headerlink" title="10、重复指令"></a>10、重复指令</h3><p>​	重复指令是一组操作数据缓冲区的指令。数据缓冲区通常是一个字节数组的形成，也可以是单字或双字。</p>
+<p>​	在重复指令操作中，使用<code>ESI</code>和<code>EDI</code>寄存器，<code>ESI</code>是源索引寄存器，<code>EDI</code>是目的索引寄存器。还有<code>ECX</code>用作计数器的变量</p>
+<p>​	重复指令还需要一个前缀，用于对长度超过1的数据做操作</p>
+<p>下边中的x可以是b、w、d，分别表示为字节、字、双字。</p>
+<table>
+<thead>
+<tr>
+<th>指令</th>
+<th>描述</th>
+<th>格式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>movsx</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>cmpsx</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>stosx</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>scasx</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>rep</td>
+<td>终止指令</td>
+<td></td>
+</tr>
+</tbody></table>
+<h4 id="rep指令终止条件"><a href="#rep指令终止条件" class="headerlink" title="rep指令终止条件"></a>rep指令终止条件</h4><table>
+<thead>
+<tr>
+<th>指令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>rep</td>
+<td>循环终止条件 ECX&#x3D;0</td>
+</tr>
+<tr>
+<td>repe,repz</td>
+<td>循环终止条件ECX&#x3D;0 or ZF&#x3D;0</td>
+</tr>
+<tr>
+<td>reone,repnz</td>
+<td>循环终止条件ECX&#x3D;0 or ZF&#x3D;1</td>
+</tr>
+</tbody></table>
+<p>​	在x86下，使用重复前缀来做多字节操作。<strong>rep</strong>指令会增加<strong>ESI</strong>和<strong>EDI</strong>这两个偏移，减少<strong>ECX</strong>寄存器，rep亲嘴会不断重复，直至<code>ECX=0</code>。<strong>repe&#x2F;repz</strong>和<strong>repne&#x2F;repnz</strong>前缀则不断重复，直至<code>ECX=0</code>或直至<code>ZF=1或0</code>。</p>
+<p>​	因此，在大部分数据缓冲区操作指令中，<strong>ESI、EDI</strong>和<strong>ECX</strong>必须为<strong>rep</strong>指令的生效，而进行适当的初始化。</p>
+<h4 id="重复指令详解"><a href="#重复指令详解" class="headerlink" title="重复指令详解"></a>重复指令详解</h4><ul>
+<li>movsb：将一串字符串从一个位置移动到另一个位置。rep前缀通常与movsb一起使用，从而复制一串长度有ECX决定的字节。movsb指令从ESI指向地址取出一个字节，将其存入EDI指向地址，然后根据方向标志(DF)的设置，将ESI和EDI的值加1或者减1.如果DF&#x3D;0，则加，否则减。</li>
+<li>cmpsb：比较两串字节，以确定其是否是相同的数据，cmpsb指令用ESI指向地址的字节减去EDI指向地址的字节，并更新相关的标志位，它经常与repe前缀一起使用。此时，<strong>cmpsb</strong>指令逐一比较两串字节，直至发现一处不同，或比较到肉。<strong>empsb</strong>指令从地址ESI获得一个字节，将其与EDI指向位置的字节进行比较，并设置标志位，然后对ESI和EDI分别加1.如果有<strong>repe</strong>前缀，就检查ECX的值和标志位，如果ECX&#x3D;0或者ZF&#x3D;0，就停止重复。</li>
+<li>scasb：从一串字节中搜索一个值。这个值有AL寄存器给出。它的工作方式与<strong>cmpsb</strong>一样，但是它是将ESI指向地址的字节与AL进行比较，而不是与EDI指向地址的字节比较。<strong>repe</strong>操作会使得这个比较不断继续，直到找到该字节，或者ECX&#x3D;0.如果在这串字节中找到了那个值，则其位置会被存储在ESI中。</li>
+<li>stosb：将值存储到EDI指向的地址。它与scasb一样，但不去搜索，而是将指定的字节存入EDI指向的地址。rep前缀与scasb一起使用后，就初始化了一段内存缓冲区，其中的每个字节都是相同的值</li>
+</ul>
+<h4 id="rep指令示例"><a href="#rep指令示例" class="headerlink" title="rep指令示例"></a>rep指令示例</h4><table>
+<thead>
+<tr>
+<th align="left">指令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><div style="width:100pt">repe cmpsb</div></td>
+<td>用于比较两块数据缓冲区。EDI和ESI必须被设为两段缓冲区的地址，ECX必须被设为缓冲区长度。当ECX&#x3D;0或者发现缓冲区不一致的时候，停止比较</td>
+</tr>
+<tr>
+<td align="left">rep stosb</td>
+<td>用于用一个给定的值初始化一块缓冲区中所有字节。EDI包含了缓冲区地址，AL则包含初始值。这个指令通常与<code>xor eax,eax</code>一起使用</td>
+</tr>
+<tr>
+<td align="left">rep movsb</td>
+<td>一般用于复制缓冲区中的字节。ESI需要被设为源缓冲区地址，EDI被设为目的缓冲区地址，ECX则必须为要复制的长度。会逐字节复制，直至ECX&#x3D;0</td>
+</tr>
+<tr>
+<td align="left">repne scasb</td>
+<td>用于在一段数据缓冲区中搜索一个字节。EDI需指向缓冲区地址，AL则包含要找的字节，ECX设为缓冲区长度。当ECX&#x3D;0或找到该字节时，比较停止</td>
+</tr>
+</tbody></table>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/04/21/%E6%81%B6%E6%84%8F%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90-day2(%E5%9F%BA%E7%A1%80%E5%8A%A8%E6%80%81%E5%88%86%E6%9E%90)/">
+                        <span class="hidden-mobile">恶意代码分析实战-day2(基础动态分析)</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  
+    <script  src="https://cdn.jsdelivr.net/npm/tocbot@4/dist/tocbot.min.js" ></script>
+  
+  
+    <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.js" ></script>
+  
+  
+    <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4/anchor.min.js" ></script>
+  
+  
+    <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js" ></script>
+  
+
+
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+        typing(title);
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>
