@@ -1,0 +1,675 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/favicon.png">
+  <link rel="icon" href="/img/favicon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Carzy">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="学习《恶意代码分析实战》一书时，跟随书本所做的练习。 Lab 7-1​	分析在文件Lab’07-01.exe中发现的恶意代码。 静态分析导入表   整体调用 完整分析查看main，程序调用了StarServiceCtrlDispatcherA说明这个程序是一个服务。服务执行sub_401040。  sub_401040：使用OpenMutexA检测互斥锁名称HGL345,如果存在则退出程序，不过不">
+<meta property="og:type" content="article">
+<meta property="og:title" content="恶意代码分析实战-day5(高级静态分析)">
+<meta property="og:url" content="http://example.com/2022/05/10/%E6%81%B6%E6%84%8F%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90-day5(%E9%AB%98%E7%BA%A7%E9%9D%99%E6%80%81%E5%88%86%E6%9E%90)/index.html">
+<meta property="og:site_name" content="Carzy的笔记">
+<meta property="og:description" content="学习《恶意代码分析实战》一书时，跟随书本所做的练习。 Lab 7-1​	分析在文件Lab’07-01.exe中发现的恶意代码。 静态分析导入表   整体调用 完整分析查看main，程序调用了StarServiceCtrlDispatcherA说明这个程序是一个服务。服务执行sub_401040。  sub_401040：使用OpenMutexA检测互斥锁名称HGL345,如果存在则退出程序，不过不">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205031954766.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205031954835.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205031954058.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205031956019.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205032124947.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205032128663.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205032135608.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205032143906.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205032154584.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205032202837.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205032213117.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205032218174.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041402579.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041401548.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041405758.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041412764.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041437473.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041426174.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041504445.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041508496.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041510145.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041518568.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041523224.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101452934.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041636578.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041640963.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041644062.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041658693.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041702746.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041707058.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041712725.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041728123.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041730131.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041739867.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205042144201.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205042141032.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205042153835.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205042211461.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205042215065.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101412587.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101424274.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101437559.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101451567.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101455438.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101456837.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101459086.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101505453.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101512229.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101515107.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101514232.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101532111.png">
+<meta property="article:published_time" content="2022-05-10T07:39:36.579Z">
+<meta property="article:modified_time" content="2022-05-10T07:43:31.210Z">
+<meta property="article:author" content="Carzy">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205031954766.png">
+  
+  
+  <title>恶意代码分析实战-day5(高级静态分析) - Carzy的笔记</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4/github-markdown.min.css" />
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hint.css@2/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10/styles/github-gist.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.css" />
+  
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.8.14","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 6.1.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Fluid</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/img/default.png') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="恶意代码分析实战-day5(高级静态分析)">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2022-05-10 15:39" pubdate>
+        2022年5月10日 下午
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-chart"></i>
+      4.5k 字
+    </span>
+  
+
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      38 分钟
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">恶意代码分析实战-day5(高级静态分析)</h1>
+            
+            <div class="markdown-body">
+              <p>学习《恶意代码分析实战》一书时，跟随书本所做的练习。</p>
+<h2 id="Lab-7-1"><a href="#Lab-7-1" class="headerlink" title="Lab 7-1"></a>Lab 7-1</h2><p>​	分析在文件Lab’07-01.exe中发现的恶意代码。</p>
+<h4 id="静态分析"><a href="#静态分析" class="headerlink" title="静态分析"></a>静态分析</h4><h5 id="导入表"><a href="#导入表" class="headerlink" title="导入表"></a>导入表</h5><p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205031954766.png" srcset="/img/loading.gif" lazyload alt="image-20220503195408415"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205031954835.png" srcset="/img/loading.gif" lazyload alt="image-20220503195424728"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205031954058.png" srcset="/img/loading.gif" lazyload alt="image-20220503195440667"></p>
+<h5 id="整体调用"><a href="#整体调用" class="headerlink" title="整体调用"></a>整体调用</h5><p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205031956019.png" srcset="/img/loading.gif" lazyload alt="image-20220503195627340"></p>
+<h5 id="完整分析"><a href="#完整分析" class="headerlink" title="完整分析"></a>完整分析</h5><p>查看main，程序调用了<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/winsvc/nf-winsvc-startservicectrldispatchera">StarServiceCtrlDispatcherA</a>说明这个程序是一个服务。服务执行<code>sub_401040</code>。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205032124947.png" srcset="/img/loading.gif" lazyload alt="image-20220503212409769"></p>
+<p>sub_401040：使用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-openmutexw">OpenMutexA</a>检测互斥锁名称<code>HGL345</code>,如果存在则退出程序，不过不存在则跳转到<code>loc_401064</code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205032128663.png" srcset="/img/loading.gif" lazyload alt="image-20220503212835848"></p>
+<p>loc_401064：</p>
+<ul>
+<li><p><a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-createmutexa">CreateMutexA</a>创建一个互斥锁<code>HGL345</code>，然后使用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/winsvc/nf-winsvc-openscmanagera">OpenSCManager</a>与服务控制管理器建立连接。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205032135608.png" srcset="/img/loading.gif" lazyload alt="image-20220503213323773"></p>
+</li>
+<li><p>然后使用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-getmodulefilenamea">GetModuleFileName</a>获取当前程序的路径,并将该路径设置为<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/winsvc/nf-winsvc-createservicea">CreateServiceA</a>创建的名为<code>Malservice</code>服务的二进制文件路径，注意创建服务时，该服务的StartType是0x02，即该服务是自启动服务，由此达成持久化驻留。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205032143906.png" srcset="/img/loading.gif" lazyload alt="image-20220503214352584"></p>
+</li>
+<li><p>然后清空edx寄存器，然后将<code>SystemTime</code>的各项值都设为0，但在使用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/timezoneapi/nf-timezoneapi-systemtimetofiletime">SystemTimeToFileTime</a>转换时间格式之前将<code>SystemTime.wYear</code>的值设为0x834(2100)，所以最后得到的时间为2100年1月1日0时0分0秒，注意该值是赋予<code>FileTime</code>变量的。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205032154584.png" srcset="/img/loading.gif" lazyload alt="image-20220503215457627"></p>
+</li>
+<li><p>接着使用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-createwaitabletimerw">CreateWaitableTimer</a>创建一个计时器对象，由于计时器最初是不活动的，需要使用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-setwaitabletimer">SetWaitableTimer</a>激活计时器，计时器发出信号的时间为<code>FileTime</code>(2100.1.1 00:00:00)。接着调用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitforsingleobject">WaitForSingleObject</a>等待指定时间到达，等待的超时时间为<code>0x0FFFFFFFF</code>（几乎不可能）。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205032202837.png" srcset="/img/loading.gif" lazyload alt="image-20220503220215489"></p>
+</li>
+<li><p>然后循环0x14次（20次），循环的内容为使用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createthread">CreateThread</a>创建线程，然后<code>Sleep(0xFFFFFFFF)</code>(这辈子都在sleep了)</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205032213117.png" srcset="/img/loading.gif" lazyload alt="image-20220503221350750"></p>
+</li>
+</ul>
+<p>这时候我们查看线程函数StartAddress：</p>
+<ul>
+<li><p>使用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/wininet/nf-wininet-internetopena">InternetOpenA</a>初始化UA为<code>Internet Explorer 8.0</code>,然后循环使用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/wininet/nf-wininet-internetopenurla">InternetOpenUrlA</a>请求网址<code>http://www.malwareanalysisbook.com</code>。注意之前sleep的线程是主线程。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205032218174.png" srcset="/img/loading.gif" lazyload alt="image-20220503221847114"></p>
+</li>
+</ul>
+<h4 id="1、当计算机重启后，这个程序如何确保它继续运行-达到持久化驻留-？"><a href="#1、当计算机重启后，这个程序如何确保它继续运行-达到持久化驻留-？" class="headerlink" title="1、当计算机重启后，这个程序如何确保它继续运行(达到持久化驻留)？"></a>1、当计算机重启后，这个程序如何确保它继续运行(达到持久化驻留)？</h4><p>以自启动的方式创建一个名为<code>Malservice</code>的服务。</p>
+<h4 id="2、为什么这个程序会使用一个互斥量？"><a href="#2、为什么这个程序会使用一个互斥量？" class="headerlink" title="2、为什么这个程序会使用一个互斥量？"></a>2、为什么这个程序会使用一个互斥量？</h4><p>有上面的分析可得知，是为了检测当前主机是否已经运行了该程序(服务)。</p>
+<h4 id="3、可以用来检测这个程序的基于主机特征是什么？"><a href="#3、可以用来检测这个程序的基于主机特征是什么？" class="headerlink" title="3、可以用来检测这个程序的基于主机特征是什么？"></a>3、可以用来检测这个程序的基于主机特征是什么？</h4><p>查看该主机是否有一个名为<code>Malservice</code>的服务进程。</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><div class="code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><pre><code class="hljs awk">net start   <span class="hljs-regexp">//</span>查看服务命令<br></code></pre></td></tr></table></figure>
+
+<h4 id="4、检测这个恶意代码的基于网络特征是是什么？"><a href="#4、检测这个恶意代码的基于网络特征是是什么？" class="headerlink" title="4、检测这个恶意代码的基于网络特征是是什么？"></a>4、检测这个恶意代码的基于网络特征是是什么？</h4><p>请求url<code>http://www.malwareanalysisbook.com</code>且请求时的UA为<code>Internet Explorer 8.0</code></p>
+<h4 id="5、这个程序的目的是什么？"><a href="#5、这个程序的目的是什么？" class="headerlink" title="5、这个程序的目的是什么？"></a>5、这个程序的目的是什么？</h4><p>循环请求一个网址，且没有之前的解析网页的操作，那么该程序有可能是一个DOS程序</p>
+<h4 id="6、这个程序什么时候完成？"><a href="#6、这个程序什么时候完成？" class="headerlink" title="6、这个程序什么时候完成？"></a>6、这个程序什么时候完成？</h4><p>由于该程序存在一个死循环，所以该程序永远不会完成。</p>
+<h2 id="Lab-7-2"><a href="#Lab-7-2" class="headerlink" title="Lab 7-2"></a>Lab 7-2</h2><p>​	分析在文件Lab07-02.exe中发现的恶意代码。</p>
+<h4 id="基础静态分析"><a href="#基础静态分析" class="headerlink" title="基础静态分析"></a>基础静态分析</h4><h5 id="导入表-1"><a href="#导入表-1" class="headerlink" title="导入表"></a>导入表</h5><p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041402579.png" srcset="/img/loading.gif" lazyload alt="image-20220504140211566"></p>
+<h5 id="整体调用-1"><a href="#整体调用-1" class="headerlink" title="整体调用"></a>整体调用</h5><p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041401548.png" srcset="/img/loading.gif" lazyload alt="image-20220504140130225"></p>
+<h5 id="完整分析-1"><a href="#完整分析-1" class="headerlink" title="完整分析"></a>完整分析</h5><p>查看main：</p>
+<ul>
+<li><p>首先调用了<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/ole2/nf-ole2-oleinitialize">OleInitialize</a>初始化COM库。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041405758.png" srcset="/img/loading.gif" lazyload alt="image-20220504140539892"></p>
+</li>
+<li><p>接着调用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/combaseapi/nf-combaseapi-cocreateinstance">CoCreateInstance</a>初始化COM对象，IDA Pro将返回的COM对象标记为ppv。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041412764.png" srcset="/img/loading.gif" lazyload alt="image-20220504141240518"></p>
+</li>
+<li><p>下面两张图显示了初始化COM对象的iid以及clsid的值。iid表示：IWebBrowser2接口，clsid表示：Internet Explorer</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041437473.png" srcset="/img/loading.gif" lazyload alt="image-20220504143654217"></p>
+</li>
+<li><p>然后将着调用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/oleauto/nf-oleauto-variantinit">VariantInit</a>初始化一个变体(<a target="_blank" rel="noopener" href="https://baike.baidu.com/item/Variant/4668832">Varian数据类型</a>)，并使用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/oleauto/nf-oleauto-sysallocstring">SysAllocString</a>复制一个字符串<code>http://www.malwareanalysisbook.com/ad.html</code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041426174.png" srcset="/img/loading.gif" lazyload alt="image-20220504142607875"></p>
+</li>
+<li><p>在下面的程序中，在调用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/oleauto/nf-oleauto-sysfreestring">SysFreeString</a>释放之前复制的字符串，还存在一个<code>call dword ptr [edx+2Ch]</code>的调用，有edx的值是ppv（COM对象），由上面我们可以得知COM对象调用的是IWebBrowser2接口，该条命令即是调用IWebBrowser2+0x2C处的函数。那么我们就要添加IWebBrowser2结构体。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041504445.png" srcset="/img/loading.gif" lazyload alt="image-20220504150415290"></p>
+<ul>
+<li><p>添加结构体：进入shift+F9然后按Insert，然后Add standard structure –&gt; search 搜索 IWebBrowser2–&gt;IWebBrowser2Vb1，接着再[edx+2Ch]处加载结构体即可</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041508496.png" srcset="/img/loading.gif" lazyload alt="image-20220504150810558"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041510145.png" srcset="/img/loading.gif" lazyload alt="image-20220504151006359"></p>
+</li>
+</ul>
+</li>
+<li><p>我们可以知道该处调用的是<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/dotnet/api/microsoft.uii.csr.browser.web.iwebbrowser2.navigate?view=dynamics-usd-3#microsoft-uii-csr-browser-web-iwebbrowser2-navigate(system-string-system-object@-system-object@-system-object@-system-object@)">IWeb Browser2.Navigate</a>，然后打开的URL是之前复制的字符串<code>http://www.malwareanalysisbook.com/ad.html</code>，打开完该网页后就释放该字符串，然后调用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/ole2/nf-ole2-oleuninitialize">OleUninitialize</a>关闭COM对象。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041518568.png" srcset="/img/loading.gif" lazyload alt="image-20220504151825479"></p>
+</li>
+</ul>
+<h4 id="1、这个程序如何完成持久化驻留？"><a href="#1、这个程序如何完成持久化驻留？" class="headerlink" title="1、这个程序如何完成持久化驻留？"></a>1、这个程序如何完成持久化驻留？</h4><p>这个程序是一次性的，不存再持久化。</p>
+<h4 id="2、这个程序的目的是什么？"><a href="#2、这个程序的目的是什么？" class="headerlink" title="2、这个程序的目的是什么？"></a>2、这个程序的目的是什么？</h4><p>打开<code>http://www.malwareanalysisbook.com/ad.html</code>。</p>
+<h4 id="3、这个程序什么时候完成执行？"><a href="#3、这个程序什么时候完成执行？" class="headerlink" title="3、这个程序什么时候完成执行？"></a>3、这个程序什么时候完成执行？</h4><p>打开完网页后就完成执行。</p>
+<h2 id="Lab-7-3"><a href="#Lab-7-3" class="headerlink" title="Lab 7-3"></a>Lab 7-3</h2><p>​	分析Lab07-03.exe以及Lab07-03.dll（运行这个程序时，需确保这两个文件在同一个目录，并且运行前需拍摄快照）</p>
+<h4 id="基础静态分析-1"><a href="#基础静态分析-1" class="headerlink" title="基础静态分析"></a>基础静态分析</h4><p>整体调用的内容有点多，我就不放了</p>
+<h5 id="导入表-2"><a href="#导入表-2" class="headerlink" title="导入表"></a>导入表</h5><h6 id="Lab07-03-exe"><a href="#Lab07-03-exe" class="headerlink" title="Lab07-03.exe"></a>Lab07-03.exe</h6><p>根据CopyFileA、CreateFileA、CreateFileMappingA、MapView0fFile可以得知，该程序会进行文件操作。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041523224.png" srcset="/img/loading.gif" lazyload alt="image-20220504152312236"></p>
+<h6 id="Lab07-03-dll"><a href="#Lab07-03-dll" class="headerlink" title="Lab07-03.dll"></a>Lab07-03.dll</h6><p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101452934.png" srcset="/img/loading.gif" lazyload alt="image-20220510145236319"></p>
+<h5 id="完整分析-2"><a href="#完整分析-2" class="headerlink" title="完整分析"></a>完整分析</h5><h6 id="分析exe"><a href="#分析exe" class="headerlink" title="分析exe"></a>分析exe</h6><p>查看main：</p>
+<ul>
+<li><p>首先判断输入的参数是不是等于2个。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041636578.png" srcset="/img/loading.gif" lazyload alt="image-20220504163637818"></p>
+</li>
+<li><p>然后将字符串<code>WARNING_THIS_WILL_DESTROY_YOUR_MACHINE</code>赋予esi，以及将第二个参数[eax+4]赋予eax，然后进入到<code>loc_401460</code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041640963.png" srcset="/img/loading.gif" lazyload alt="image-20220504164000223"></p>
+</li>
+</ul>
+<p>查看loc_401460：</p>
+<ul>
+<li><p>将ESI的值与EAX的值进行对比，如果内容不一样则退出程序。如果一致则会跳转到<code>loc_40148D</code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041644062.png" srcset="/img/loading.gif" lazyload alt="image-20220504164446965"></p>
+</li>
+</ul>
+<p>查看loc_40148D：</p>
+<ul>
+<li><p>调用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea">CreateFileA</a>创建<code>C:\\Windows\\System32\\Kernel32.dll</code>,然后调用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createfilemappinga">CreateFileMappingA</a>、<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-mapviewoffile">MapViewOfFile</a>将其映射到内存。这里将kernel32.dll的句柄赋值给<code>hObject</code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041658693.png" srcset="/img/loading.gif" lazyload alt="image-20220504165809582"></p>
+</li>
+<li><p>接着打开<code>Lab07-03.dll</code>,这里的EAX是Kernel32.dll的内存地址，将其赋值给了argc</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041702746.png" srcset="/img/loading.gif" lazyload alt="image-20220504170229509"></p>
+</li>
+<li><p>接着将Lab07-03.dll的句柄赋值给<code>var_4</code>,然后调用<code>loc_401503</code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041707058.png" srcset="/img/loading.gif" lazyload alt="image-20220504170755934"></p>
+</li>
+</ul>
+<p>查看loc_401503：调用<code>loc_401518</code>这两个函数的作用就是将Lab07-03.dll映射进内存，然后将该内存地址赋值给argv,最后调用<code>loc_401538</code></p>
+<p>​	<img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041712725.png" srcset="/img/loading.gif" lazyload alt="image-20220504171224615"></p>
+<p>由于后面的都是一连串很繁琐的代码，我直接跳到下一个调用windows API的地方</p>
+<p>查看loc_4017D4：</p>
+<ul>
+<li><p>首先调用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/handleapi/nf-handleapi-closehandle">CloseHandle</a>关闭Kernel32.dll的句柄,然后关闭Lab07-03.dll的句柄，接着调用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-copyfilea">CopyFileA</a>将<code>Lab07-03.dll</code>复制到<code>C:\\windows\\system32\\kerne132.dll</code>，然后进入<code>loc_401806</code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041728123.png" srcset="/img/loading.gif" lazyload alt="image-20220504172835252"></p>
+</li>
+</ul>
+<p>查看loc_401806：将<code>C:\\*</code>压入栈中，然后调用<code>sub_4011E0</code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041730131.png" srcset="/img/loading.gif" lazyload alt="image-20220504172959095"></p>
+<p>查看sub_4011E0：</p>
+<ul>
+<li><p>调用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-findfirstfilea">FindFirstFileA</a>来搜索C盘下所有文件，这里将搜索到的文件句柄赋值给<code>hFindFile</code>，然后就是一连串繁琐的代码，我们直接进入到下一个存在windows API函数的位置。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205041739867.png" srcset="/img/loading.gif" lazyload alt="image-20220504173859151"></p>
+</li>
+</ul>
+<p>下一个存在windows API函数的的位置是<code>loc_40135C</code></p>
+<p>查看loc_40135C：</p>
+<ul>
+<li><p>调用<a target="_blank" rel="noopener" href="https://docs.microsoft.com/zh-cn/cpp/c-runtime-library/reference/stricmp-wcsicmp-mbsicmp-stricmp-l-wcsicmp-l-mbsicmp-l?view=msvc-170">_stricmp</a>来查找对exe文件进行匹配，也就是对比文件名。对比文件结束后执行了一条<code>call sub_4010A0</code>命令，还在调用该函数前将EBP压入栈。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205042144201.png" srcset="/img/loading.gif" lazyload alt="image-20220504214407144"></p>
+<p>—-分割线（上图可知ebx的值是Reserved1）</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205042141032.png" srcset="/img/loading.gif" lazyload alt="image-20220504214126913"></p>
+</li>
+<li><p>我们继续分析这层函数，再这层函数的底部发现了一条<code>jmp loc_401210</code>，跳转到了第一次进行一系列的繁琐操作开头。由此可得知该函数是循环查找C盘下所有文件</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205042153835.png" srcset="/img/loading.gif" lazyload alt="image-20220504215342412"></p>
+</li>
+</ul>
+<p>查看sub_4010A0：</p>
+<ul>
+<li><p>调用，将ebp压入栈中，这里的IDA将其识别为FileName</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205042211461.png" srcset="/img/loading.gif" lazyload alt="image-20220504221104198"></p>
+</li>
+<li><p>正式进入sub_4010A0，还是和之前一样，将整个文件映射进入内存</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205042215065.png" srcset="/img/loading.gif" lazyload alt="image-20220504221526144"></p>
+</li>
+<li><p>然后调用很多<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-isbadreadptr">IsBadReadPtr</a>验证指针是否有效，再往下看就会看到一个<code>_stricmp</code>检测字符串的值是不是<code>kernel32.dll</code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101412587.png" srcset="/img/loading.gif" lazyload alt="image-20220510141208482"></p>
+</li>
+<li><p>接着进入到再缓冲区中搜索字符串的环节，注意第三行的<code>repne scasb</code>，其中第一行的edi是指向的缓冲区地址，eax是要搜索的字符串，ecx为缓冲区长度，当ecx&#x3D;0或找到该字符串时，比较停止。</p>
+<ul>
+<li>这里的地址是ebx，而ebx是再上面的被压入<code>_stricmp</code>的Str1</li>
+<li>下面的<code>rep movsd</code>也是同理，将<code>dword_403010</code>复制到<code>edi</code>中，使用<code>kerne132.dll</code>替换掉<code>kernel32.dll</code></li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101424274.png" srcset="/img/loading.gif" lazyload alt="image-20220510142404370"></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101437559.png" srcset="/img/loading.gif" lazyload alt="image-20220510143753042"></p>
+</li>
+</ul>
+<h6 id="分析DLL"><a href="#分析DLL" class="headerlink" title="分析DLL"></a>分析DLL</h6><p>字符串列表</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101451567.png" srcset="/img/loading.gif" lazyload alt="image-20220510145124485"></p>
+<p>查看main：</p>
+<ul>
+<li><p>分配一个栈空间</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101455438.png" srcset="/img/loading.gif" lazyload alt="image-20220510145458355"></p>
+</li>
+<li><p>通过OpenMutexA和CreateMutexA保证只存在一个互斥量<code>SADFHUHF</code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101456837.png" srcset="/img/loading.gif" lazyload alt="image-20220510145640552"></p>
+</li>
+<li><p>接着建立一个socket连接，IP为<code>127.26.152.13</code>,端口为<code>0x50（80）</code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101459086.png" srcset="/img/loading.gif" lazyload alt="image-20220510145938970"></p>
+</li>
+<li><p>接着来到发送数据的环节<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/winsock2/nf-winsock2-send">send</a>,发送一个<code>hello</code></p>
+</li>
+</ul>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101505453.png" srcset="/img/loading.gif" lazyload alt="image-20220510150544839"></p>
+<ul>
+<li><p>在往下看，来到接受数据的环节<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/winsock/nf-winsock-recv">recv</a>,<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/strncmp-wcsncmp-mbsncmp-mbsncmp-l?view=msvc-170">strncmp</a>检测接受到的前五个字符是不是<code>sleep</code>。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101512229.png" srcset="/img/loading.gif" lazyload alt="image-20220510151235808"></p>
+<ul>
+<li><p>如果是的话，就sleep 60秒，sleep结束后，又回到了接受数据环节。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101515107.png" srcset="/img/loading.gif" lazyload alt="image-20220510151537152"></p>
+</li>
+</ul>
+</li>
+<li><p>如果不是的话，则检测前四个字符是不是<code>exec</code>。</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101514232.png" srcset="/img/loading.gif" lazyload alt="image-20220510151443152"></p>
+<ul>
+<li><p>当前四个字符是<code>exec</code>时，<a target="_blank" rel="noopener" href="https://docs.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessa">CreateProcessA</a>,创建一个进程及主线程，由于第一个参数为0，所有<code>lpCommandLine</code>的值，应该为一个程序的绝对路径。即<code>exec 绝对路径</code></p>
+<p><img src="https://cdn.jsdelivr.net/gh/Carzy-feng/images@main/data/202205101532111.png" srcset="/img/loading.gif" lazyload alt="image-20220510153229918"></p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 id="1、这个程序如如何完成持久化驻留，来确保在计算机被重启后他能继续运行？"><a href="#1、这个程序如如何完成持久化驻留，来确保在计算机被重启后他能继续运行？" class="headerlink" title="1、这个程序如如何完成持久化驻留，来确保在计算机被重启后他能继续运行？"></a>1、这个程序如如何完成持久化驻留，来确保在计算机被重启后他能继续运行？</h4><p>这个程序通过将lab07-03.dll复制到<code>C:\\windows\\system32\\kerne132.dll</code>,然后替换C盘下所有加载有<code>kernel32.dll</code>的exe，将其替换为加载<code>kerne132.exe</code></p>
+<h4 id="2、这个恶意代码的两个明显的基于主机特征是什么？"><a href="#2、这个恶意代码的两个明显的基于主机特征是什么？" class="headerlink" title="2、这个恶意代码的两个明显的基于主机特征是什么？"></a>2、这个恶意代码的两个明显的基于主机特征是什么？</h4><p>文件<code>C:\\windows\\system32\\kerne132.dll</code>，以及一个<code>SADFHUHF</code>的互斥量</p>
+<h4 id="3、这个程序的目的是什么？"><a href="#3、这个程序的目的是什么？" class="headerlink" title="3、这个程序的目的是什么？"></a>3、这个程序的目的是什么？</h4><p>创建一个后门。该后门存在与所有加载有<code>Kerenl32.dll</code>的exe文件中。该后门拥有两个功能，一个执行命令功能，一个sleep功能</p>
+<h4 id="4、一旦这个恶意代码被安装，你如何移除它？"><a href="#4、一旦这个恶意代码被安装，你如何移除它？" class="headerlink" title="4、一旦这个恶意代码被安装，你如何移除它？"></a>4、一旦这个恶意代码被安装，你如何移除它？</h4><p>1、写一个程序，将系统中加载<code>kerne132.dll</code>的exe，改为加载<code>kernel32.dll</code>。</p>
+<p>2、修改该程序中的<code>kerne132.dll</code>为<code>kerenl32.dll</code>，然后执行程序即可</p>
+<p>2、将<code>keren132.dll</code>替换为<code>kerenl32.dll</code></p>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/04/29/%E6%81%B6%E6%84%8F%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90-day4(%E9%AB%98%E7%BA%A7%E9%9D%99%E6%80%81%E5%88%86%E6%9E%90)/">
+                        <span class="hidden-mobile">恶意代码分析实战-day4(高级静态分析)</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+
+  
+
+  
+</footer>
+
+
+  <!-- SCRIPTS -->
+  
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  
+    <script  src="https://cdn.jsdelivr.net/npm/tocbot@4/dist/tocbot.min.js" ></script>
+  
+  
+    <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.js" ></script>
+  
+  
+    <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4/anchor.min.js" ></script>
+  
+  
+    <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js" ></script>
+  
+
+
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+        typing(title);
+      
+    })(window, document);
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+</body>
+</html>
